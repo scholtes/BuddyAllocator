@@ -15,28 +15,54 @@
 
 
 
+// Define structs used to pass parameters
+struct get_mem_struct {
+    int mem;
+    int size;
+};
+
+struct free_mem_struct {
+    int mem;
+    int ref;
+};
+
+struct write_mem_struct {
+    int mem;
+    int ref;
+    char *buf;
+};
+
+struct read_mem_struct {
+    int mem;
+    int ref;
+    char *buf;
+    int size;
+};
+
+
+
 // Request to allocate a block of memory
-// Last arameter get casted to:
-//     [int *, int *]
-#define IOCTL_GET_MEM _IOWR(MAJOR_NUM, 0, void **)
+// Last parameter get casted to:
+//     struct get_mem_struct *
+#define IOCTL_GET_MEM _IOWR(MAJOR_NUM, 0, void *)
 
 
 // Request to free memory
-// Last arameter get casted to:
-//     [int *, int *]
-#define IOCTL_FREE_MEM _IOWR(MAJOR_NUM, 1, void **)
+// Last parameter get casted to:
+//     struct free_mem_struct *
+#define IOCTL_FREE_MEM _IOWR(MAJOR_NUM, 1, void *)
 
 
 // Request to write to memory
-// Last arameter get casted to:
-//     [int *, int *, char *]
-#define IOCTL_WRITE_MEM _IOwR(MAJOR_NUM, 2, void **)
+// Last parameter get casted to:
+//     struct write_mem_struct *
+#define IOCTL_WRITE_MEM _IOwR(MAJOR_NUM, 2, void *)
 
 
 // Request to read from memory
-// Last arameter get casted to:
-//     [int *, int *, char *, int *]
-#define IOCTL_READ_MEM _IOWR(MAJOR_NUM, 3, void **)
+// Last parameter get casted to:
+//     struct read_mem_struct *
+#define IOCTL_READ_MEM _IOWR(MAJOR_NUM, 3, void *)
 
 
 
