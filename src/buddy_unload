@@ -1,0 +1,3 @@
+#!/bin/sh
+sudo rmmod buddy-driver
+sudo rm /dev/mem_dev

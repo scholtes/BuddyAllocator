@@ -1,0 +1,5 @@
+#!/bin/sh
+sudo insmod buddy-driver.ko
+sudo mknod /dev/mem_dev c 150 0
+sudo chmod a+w /dev/mem_dev
+dmesg
