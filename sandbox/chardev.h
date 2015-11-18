@@ -21,7 +21,7 @@
 /* 
  * Set the message of the device driver 
  */
-#define IOCTL_SET_MSG _IOR(MAJOR_NUM, 0, char *)
+#define IOCTL_SET_MSG _IOR(MAJOR_NUM, 0, void *)
 /*
  * _IOR means that we're creating an ioctl command 
  * number for passing information from a user process
@@ -37,10 +37,14 @@
  * the process to the kernel.
  */
 
+ struct GetSetMsgStruct {
+    char *msg;
+ };
+
 /* 
  * Get the message of the device driver 
  */
-#define IOCTL_GET_MSG _IOR(MAJOR_NUM, 1, char *)
+#define IOCTL_GET_MSG _IOR(MAJOR_NUM, 1, void *)
 /* 
  * This IOCTL is used for output, to get the message 
  * of the device driver. However, we still need the 
@@ -51,12 +55,15 @@
 /* 
  * Get the n'th byte of the message 
  */
-#define IOCTL_GET_NTH_BYTE _IOWR(MAJOR_NUM, 2, int)
+#define IOCTL_GET_NTH_BYTE _IOWR(MAJOR_NUM, 2, void *)
 /* 
  * The IOCTL is used for both input and output. It 
  * receives from the user a number, n, and returns 
  * Message[n]. 
  */
+struct GetNthByteStruct {
+    int pos;
+};
 
 /* 
  * The name of the device file 

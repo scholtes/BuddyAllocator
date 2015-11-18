@@ -44,7 +44,10 @@ ioctl_set_msg(int file_desc, char *message) {
    int ret_val;
    
    /* IOCTL_SET_MSG is an ioctl number */
-   ret_val = ioctl(file_desc, IOCTL_SET_MSG, message);
+   struct GetSetMsgStruct params = {
+      .msg = message
+   };
+   ret_val = ioctl(file_desc, IOCTL_SET_MSG, (void *)(&params));
    if (ret_val < 0) {
       printf("ioctl_set_msg failed:%d\n", ret_val);
       exit(-1);
@@ -63,7 +66,11 @@ ioctl_get_msg(int file_desc) {
     * the kernel the buffer length and another to give
     * it the buffer to fill
     */
-   ret_val = ioctl(file_desc, IOCTL_GET_MSG, message);
+
+   struct GetSetMsgStruct params = {
+      .msg = message
+   };
+   ret_val = ioctl(file_desc, IOCTL_GET_MSG, (void *)(&params));
    if (ret_val < 0) {
       printf("ioctl_get_msg failed:%d\n", ret_val);
       exit(-1);
@@ -79,10 +86,16 @@ ioctl_get_nth_byte(int file_desc) {
    printf("get_nth_byte message:");
    
    i = 0;
+
+   struct GetNthByteStruct params = {
+      .pos = i
+   };
+
    do {
-      c = ioctl(file_desc, IOCTL_GET_NTH_BYTE, i++);
+      c = ioctl(file_desc, IOCTL_GET_NTH_BYTE, (void *)(&params));
+      params.pos++;
       if (c < 0) {
-	 printf("ioctl_get_nth_byte failed at the %d'th byte:\n", i);
+	 printf("ioctl_get_nth_byte failed at the %d'th byte:\n", params.pos);
 	 exit(-1);
       }
       

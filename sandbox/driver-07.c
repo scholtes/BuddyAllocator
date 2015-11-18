@@ -116,28 +116,28 @@ long ioctl(struct file *file,
       /* Receive a pointer to a message (in user space) and set that
          to be the device's message.  Get the parameter given to 
          ioctl by the process. */
-      temp = (char*)ioctl_param;
+      temp = ((struct GetSetMsgStruct*)ioctl_param)->msg;
       
       /* Find the length of the message */
       get_user(ch, temp);
       for (i = 0; ch && i < BUF_LEN; i++, temp++) get_user(ch, temp);
       
-      write(file, (char*)ioctl_param, i, 0);
+      write(file, ((struct GetSetMsgStruct*)ioctl_param)->msg, i, 0);
       break;
       
    case IOCTL_GET_MSG:
       /* Give the current message to the calling process - the parameter 
          is a pointer whose space must be filled. */
-      i = read(file, (char*)ioctl_param, 99, 0);
-      printk(KERN_INFO "ioctl_get_msg: %s i=%d\n", (char*)ioctl_param,i);
+      i = read(file, ((struct GetSetMsgStruct*)ioctl_param)->msg, 99, 0);
+      printk(KERN_INFO "ioctl_get_msg: %s i=%d\n", ((struct GetSetMsgStruct*)ioctl_param)->msg,i);
       
       /* Put a zero at the end of the buffer for proper string terminated */
-      put_user('\0', (char*)ioctl_param + i);
+      put_user('\0', ((struct GetSetMsgStruct*)ioctl_param)->msg + i);
       break;
       
    case IOCTL_GET_NTH_BYTE:
       /* This ioctl has input (ioctl_param) and output (the return value) */
-      return Message[ioctl_param];
+      return Message[((struct GetNthByteStruct *)ioctl_param)->pos];
       break;
    }
    
