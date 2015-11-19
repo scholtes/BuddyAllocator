@@ -8,17 +8,21 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/fs.h>
+#include <linux/slab.h> // kmalloc, kfree
 #include <asm/uaccess.h>
 
 #include "buddy-dev.h"
 #define DEVICE_NAME "mem_dev"
 #define BUDDY_BLOCK_SIZE (1<<12)
 #define BUDDY_NUM_BLOCKS (1<<12)
+#define MEM_SIZE (BUDDY_NUM_BLOCKS * BUDDY_BLOCK_SIZE)
 
 MODULE_LICENSE("GPL");
 
 // Is device open?  Prevents concurent access into the same device
 static int Device_Open = 0;
+// The actual block of memory to touch and play with
+static char *memory;
 
 
 static int open(struct inode *inode, struct file *file) {
@@ -99,6 +103,9 @@ int init_module(void) {
         return ret_val;
     }
 
+    // GFP flag so that we can sleep while not in use but also greedily grab memory
+    memory = kmalloc(MEM_SIZE, GFP_KERNEL);
+
     printk("Success! Major number = %d\n", MAJOR_NUM);
 
     return 0;
@@ -107,4 +114,5 @@ int init_module(void) {
 void cleanup_module(void) {
     printk("Buddy Allocator cleaning up...\n");
     unregister_chrdev(MAJOR_NUM, DEVICE_NAME);
+    kfree(memory);
 }
