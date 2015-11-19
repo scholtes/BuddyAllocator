@@ -10,3 +10,25 @@
 #include <fcntl.h>
 
 #include "buddy-ioctl.c"
+
+// Sample usage provided by Dr. Franco from lab 8 page
+void franco_test() {
+    int mem, ref;
+    char buffer[4096];
+
+    mem = open("/dev/mem_dev", 0);
+    ref = get_mem(mem, 100);
+    sprintf(buffer, "Hello buddy");
+    write_mem(mem, ref, buffer);
+    read_mem(mem, ref+3, buffer, 10);
+    printf("buffer: %s\n", buffer); /* buffer: lo buddy */
+    free_mem(mem, ref);
+    close(mem);
+}
+
+int main(int argc, const char **argv) {
+
+   franco_test();
+
+   return 0;
+}

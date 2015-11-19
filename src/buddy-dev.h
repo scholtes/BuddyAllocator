@@ -19,17 +19,23 @@
 struct get_mem_struct {
     int mem;
     int size;
+
+    int return_val;
 };
 
 struct free_mem_struct {
     int mem;
     int ref;
+
+    int return_val;
 };
 
 struct write_mem_struct {
     int mem;
     int ref;
     char *buf;
+
+    int return_val;
 };
 
 struct read_mem_struct {
@@ -37,6 +43,8 @@ struct read_mem_struct {
     int ref;
     char *buf;
     int size;
+
+    int return_val;
 };
 
 

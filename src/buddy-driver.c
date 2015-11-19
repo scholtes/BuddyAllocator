@@ -48,7 +48,7 @@ int init_module(void) {
         return ret_val;
     }
 
-    printk("Success! Major number = %d", MAJOR_NUM);
+    printk("Success! Major number = %d\n", MAJOR_NUM);
 
     return 0;
 }
