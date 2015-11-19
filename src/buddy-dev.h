@@ -52,25 +52,25 @@ struct read_mem_struct {
 // Request to allocate a block of memory
 // Last parameter get casted to:
 //     struct get_mem_struct *
-#define IOCTL_GET_MEM _IOWR(MAJOR_NUM, 0, void *)
+#define IOCTL_GET_MEM _IOR(MAJOR_NUM, 0, void *)
 
 
 // Request to free memory
 // Last parameter get casted to:
 //     struct free_mem_struct *
-#define IOCTL_FREE_MEM _IOWR(MAJOR_NUM, 1, void *)
+#define IOCTL_FREE_MEM _IOR(MAJOR_NUM, 1, void *)
 
 
 // Request to write to memory
 // Last parameter get casted to:
 //     struct write_mem_struct *
-#define IOCTL_WRITE_MEM _IOwR(MAJOR_NUM, 2, void *)
+#define IOCTL_WRITE_MEM _IOR(MAJOR_NUM, 2, void *)
 
 
 // Request to read from memory
 // Last parameter get casted to:
 //     struct read_mem_struct *
-#define IOCTL_READ_MEM _IOWR(MAJOR_NUM, 3, void *)
+#define IOCTL_READ_MEM _IOR(MAJOR_NUM, 3, void *)
 
 
 

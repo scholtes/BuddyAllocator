@@ -17,16 +17,67 @@
 
 MODULE_LICENSE("GPL");
 
+// Is device open?  Prevents concurent access into the same device
+static int Device_Open = 0;
 
-static int open(struct inode *inode, struct file *file) { return 0; }
 
-static int release(struct inode *inode, struct file *file) { return 0; }
+static int open(struct inode *inode, struct file *file) {
+    printk("----open(...)\n");
+
+    // TODO: a more sound approach would be to use a read-write semaphore.  This
+    // is just what driver-07.c does, and for now it will do.
+    if(Device_Open) {
+        return -EBUSY;
+    } else {
+        Device_Open++;
+    }
+
+    return 0;
+}
+
+static int release(struct inode *inode, struct file *file) {
+    printk("----release(...)\n");
+
+    Device_Open--;
+    
+    return 0;
+}
 
 static ssize_t read(struct file *file, char *buffer, size_t length, loff_t *offset) { return 0; }
 
 static ssize_t write(struct file *file, const char *buffer, size_t length, loff_t *offset) { return 0; }
 
-long ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param) { return 0; }
+long ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param) {
+
+    switch(ioctl_num) {
+    case IOCTL_GET_MEM:
+        printk("    get_mem(...)\n");
+        // TOOD: FILL IN
+        ((struct get_mem_struct *)ioctl_param)->return_val = 12;
+        break;
+
+    case IOCTL_FREE_MEM:
+        printk("    free_mem(...)\n");
+        // TOOD: FILL IN
+        break;
+
+    case IOCTL_WRITE_MEM:
+        printk("    write_mem(...)\n");
+        // TOOD: FILL IN
+        break;
+
+    case IOCTL_READ_MEM:
+        printk("    read_mem(...)\n");
+        // TOOD: FILL IN
+        break;
+
+    default:
+        printk(KERN_ALERT "Invalid IOCTL switch %d!\n", ioctl_num);
+        break;
+    }
+
+    return 0;
+}
 
 
 struct file_operations Fops = {

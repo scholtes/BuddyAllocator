@@ -18,14 +18,28 @@
 // Returns an integer which is a reference to the block (or a negative number on failure).
 int get_mem(int mem, int size) {
 
-    return 0;
+    struct get_mem_struct params = {
+        .mem = mem,
+        .size = size
+    };
+
+    ioctl(mem, IOCTL_GET_MEM, (void *)(&params));
+
+    return params.return_val;
 }
 
 // Free the block of memory referenced as ref from the memory manager whose handle is mem.
 // Returns 0 on success and -1 on error
 int free_mem(int mem, int ref) {
 
-    return 0;
+    struct free_mem_struct params = {
+        .mem = mem,
+        .ref = ref
+    };
+
+    ioctl(mem, IOCTL_FREE_MEM, (void *)(&params));
+
+    return params.return_val;
 }
 
 // Writes the contents of the buffer buf to the memory block ref of the memory manager whose handle is mem.
@@ -33,12 +47,29 @@ int free_mem(int mem, int ref) {
 // Returns the number of bytes written or a negative number on error.
 int write_mem(int mem, int ref, char *buf) {
 
-    return 0;
+    struct write_mem_struct params = {
+        .mem = mem,
+        .ref = ref,
+        .buf = buf
+    };
+
+    ioctl(mem, IOCTL_WRITE_MEM, (void *)(&params));
+
+    return params.return_val;
 }
 
 // Reads size bytes from the memory block ref of memory manager mem and returns the result in buf.
 // The return value of read_mem is the number of bytes read or a negative number on error.
 int read_mem(int mem, int ref, char *buf, int size) {
 
-    return 0;
+    struct read_mem_struct params = {
+        .mem = mem,
+        .ref = ref,
+        .buf = buf,
+        .size = size
+    };
+
+    ioctl(mem, IOCTL_READ_MEM, (void *)(&params));
+
+    return params.return_val;
 }

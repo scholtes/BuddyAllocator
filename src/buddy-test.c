@@ -18,6 +18,7 @@ void franco_test() {
 
     mem = open("/dev/mem_dev", 0);
     ref = get_mem(mem, 100);
+    printf("reference = %d\n", ref);
     sprintf(buffer, "Hello buddy");
     write_mem(mem, ref, buffer);
     read_mem(mem, ref+3, buffer, 10);
