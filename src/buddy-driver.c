@@ -308,43 +308,6 @@ struct file_operations Fops = {
 };
 
 
-
-void test_get_block_from_address(void) {
-    // This test designed only to work for 16 (max possible) blocks, for my debugging needs
-    /*__split_block(buddy_root);
-    __split_block(buddy_root->left_child);
-    __split_block(buddy_root->left_child->right_child);
-    __split_block(buddy_root->right_child);
-    __split_block(buddy_root->right_child->right_child);
-    __split_block(buddy_root->right_child->right_child->left_child);*/
-    printk("~~ ref = %d\n", get_mem(4 * 16, buddy_root, MEM_SIZE)/16);
-    printk("~~ ref = %d\n", get_mem(2 * 16, buddy_root, MEM_SIZE)/16);
-    printk("~~ ref = %d\n", get_mem(2 * 16, buddy_root, MEM_SIZE)/16);
-    printk("~~ ref = %d\n", get_mem(4 * 16, buddy_root, MEM_SIZE)/16);
-    printk("~~ ref = %d\n", get_mem(1 * 16, buddy_root, MEM_SIZE)/16);
-
-    printk("--Expected: %p\n", buddy_root->right_child->right_child->left_child->left_child);
-    printk("--Actual:   %p\n\n", __get_block_from_address(12*BUDDY_BLOCK_SIZE));
-
-    printk("--Expected: %p\n", buddy_root->right_child->left_child);
-    printk("--Actual:   %p\n\n", __get_block_from_address(10*BUDDY_BLOCK_SIZE + 15));
-
-    printk("--Expected: %p\n", buddy_root->left_child->right_child->right_child);
-    printk("--Actual:   %p\n\n", __get_block_from_address(7*BUDDY_BLOCK_SIZE + 15));
-
-    printk("--Expected: %p\n", buddy_root->right_child->left_child);
-    printk("--Actual:   %p\n\n", __get_block_from_address(7*BUDDY_BLOCK_SIZE + 16));
-
-    /*__free_and_merge(buddy_root->left_child->right_child->left_child);
-    __free_and_merge(buddy_root->right_child->right_child->left_child->left_child);*/
-    printk("~~ Freed mem status: %d\n", free_mem(4 * 16)); // 0
-    printk("~~ Freed mem status: %d\n", free_mem(4 * 16)); // -1
-    printk("~~ Freed mem status: %d\n", free_mem(12 * 16)); // 0
-}
-
-
-
-
 int init_module(void) {
     int ret_val;
 
@@ -365,7 +328,6 @@ int init_module(void) {
     buddy_root->parent = NULL;
     buddy_root->left_child = NULL;
     buddy_root->right_child = NULL;
-    //test_get_block_from_address();
 
     printk("Success! Major number = %d\n", MAJOR_NUM);
 
