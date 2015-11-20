@@ -15,12 +15,6 @@
 #include "buddy-dev.h"
 #define DEVICE_NAME "mem_dev"
 
-// TODO change these back to (1<<12) when done testing
-#define BUDDY_BLOCK_DEPTH 4
-#define BUDDY_BLOCK_SIZE (1<<BUDDY_BLOCK_DEPTH)
-#define BUDDY_NUM_BLOCKS (1<<BUDDY_BLOCK_DEPTH)
-#define MEM_SIZE (BUDDY_NUM_BLOCKS * BUDDY_BLOCK_SIZE)
-
 MODULE_LICENSE("GPL");
 
 // Is device open?  Prevents concurent access into the same device

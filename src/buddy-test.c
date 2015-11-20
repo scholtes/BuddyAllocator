@@ -33,6 +33,11 @@ void franco_test() {
 void my_test() {
     int mem;
 
+    if(BUDDY_BLOCK_DEPTH != 4) {
+        printf("    These tests were hardcoded for BUDDY_BLOCK_DEPTH = 4 only\n");
+        return;
+    }
+
     mem = open("/dev/mem_dev", 0);
     // Free and allocate a bunch of memory chunks
 

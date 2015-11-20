@@ -13,6 +13,14 @@
 // Our statically chosen major device number
 #define MAJOR_NUM 150
 
+// Change the value of BUDDY_BLOCK_DEPTH to play around with the memory size.
+// My system doesn't seem to appreciate BUDDY_BLOCK_DEPTH = 12 (must not like
+// being coerced to allocate 16 MB of contiguous space)
+#define BUDDY_BLOCK_DEPTH 4
+#define BUDDY_BLOCK_SIZE (1<<BUDDY_BLOCK_DEPTH)
+#define BUDDY_NUM_BLOCKS (1<<BUDDY_BLOCK_DEPTH)
+#define MEM_SIZE (BUDDY_NUM_BLOCKS * BUDDY_BLOCK_SIZE)
+
 
 
 // Define structs used to pass parameters
