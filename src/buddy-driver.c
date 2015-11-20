@@ -10,6 +10,7 @@
 #include <linux/fs.h>
 #include <linux/slab.h> // kmalloc, kfree
 #include <asm/uaccess.h>
+#include <linux/string.h>
 
 #include "buddy-dev.h"
 #define DEVICE_NAME "mem_dev"
@@ -173,7 +174,6 @@ int free_mem(int ref) {
     return 0;
 }
 
-
 /// ------------------------------------------------------------------------ ///
 
 
@@ -199,9 +199,59 @@ static int release(struct inode *inode, struct file *file) {
     return 0;
 }
 
-static ssize_t read(struct file *file, char *buffer, size_t length, loff_t *offset) { return 0; }
+static ssize_t read(struct file *file, char *buffer, size_t length, loff_t *offset) {
+    copy_to_user(buffer, memory + (long)offset, length);
 
-static ssize_t write(struct file *file, const char *buffer, size_t length, loff_t *offset) { return 0; }
+    return length;
+}
+
+static ssize_t write(struct file *file, const char *buffer, size_t length, loff_t *offset) {
+    copy_from_user(memory + (long)offset, buffer, length);
+
+    return length;
+}
+
+/// -------------- Some more buddy allocator wrapper functions ------------- ///
+
+// Writes to memory.  Num bytes written on success, -1 on failure
+int write_mem(struct file *file, int ref, char *buf, int size) {
+    struct block_node *block1;
+    struct block_node *block2;
+    long rf;
+
+    block1 = __get_block_from_address(ref);
+    block2 = __get_block_from_address(ref + size -1);
+
+    // Sanity check -- if the blocks are NULL or if they aren't the same,
+    // then there is an error
+    rf = ref;
+    if(block1 && block1 == block2) {
+        return (int)write(file, buf, size, (loff_t *)rf);
+    }
+
+    return -1;
+}
+
+// Reads from memory.  Num bytes read on success, -1 on failure
+int read_mem(struct file *file, int ref, char *buf, int size) {
+    struct block_node *block1;
+    struct block_node *block2;
+    long rf;
+
+    block1 = __get_block_from_address(ref);
+    block2 = __get_block_from_address(ref + size -1);
+
+    // Sanity check -- if the blocks are NULL or if they aren't the same,
+    // then there is an error
+    rf = ref;
+    if(block1 && block1 == block2) {
+        return (int)read(file, buf, size, (loff_t *)rf);
+    }
+
+    return -1;
+}
+
+/// ------------------------------------------------------------------------ ///
 
 long ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param) {
     switch(ioctl_num) {
@@ -222,12 +272,22 @@ long ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
 
     case IOCTL_WRITE_MEM:
         printk("    write_mem(...)\n");
-        // TOOD: FILL IN
+        ((struct write_mem_struct *)ioctl_param)->return_val = write_mem(
+            file,
+            ((struct write_mem_struct *)ioctl_param)->ref,
+            ((struct write_mem_struct *)ioctl_param)->buf,
+            ((struct write_mem_struct *)ioctl_param)->size
+        );
         break;
 
     case IOCTL_READ_MEM:
         printk("    read_mem(...)\n");
-        // TOOD: FILL IN
+        ((struct read_mem_struct *)ioctl_param)->return_val = read_mem(
+            file,
+            ((struct write_mem_struct *)ioctl_param)->ref,
+            ((struct write_mem_struct *)ioctl_param)->buf,
+            ((struct write_mem_struct *)ioctl_param)->size
+        );
         break;
 
     default:
@@ -298,12 +358,14 @@ int init_module(void) {
 
     // GFP flag so that we can sleep while not in use but also greedily grab memory
     memory = kmalloc(MEM_SIZE, GFP_KERNEL);
+    memset(memory, 0, MEM_SIZE);
+
     buddy_root = kmalloc(sizeof(struct block_node), GFP_KERNEL);
     buddy_root->state = FREE;
     buddy_root->parent = NULL;
     buddy_root->left_child = NULL;
     buddy_root->right_child = NULL;
-    test_get_block_from_address();
+    //test_get_block_from_address();
 
     printk("Success! Major number = %d\n", MAJOR_NUM);
 

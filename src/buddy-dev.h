@@ -34,6 +34,7 @@ struct write_mem_struct {
     int mem;
     int ref;
     char *buf;
+    int size;
 
     int return_val;
 };

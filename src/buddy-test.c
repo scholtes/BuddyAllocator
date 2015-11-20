@@ -20,16 +20,49 @@ void franco_test() {
     ref = get_mem(mem, 100);
     printf("reference = %d\n", ref);
     sprintf(buffer, "Hello buddy");
-    write_mem(mem, ref, buffer);
+    write_mem(mem, ref, buffer, 11);
     read_mem(mem, ref+3, buffer, 10);
     printf("buffer: %s\n", buffer); /* buffer: lo buddy */
     free_mem(mem, ref);
     close(mem);
 }
 
+// My own tests.  Mainly to verify buddy allocator logic for
+// getting and freeing memory
+void my_test() {
+    int mem;
+
+    mem = open("/dev/mem_dev", 0);
+    // Free and allocate a bunch of memory chunks
+
+    printf("Expected: %d, Actual: %d\n", 0 * 16, get_mem(mem, 4 * 16));
+    printf("Expected: %d, Actual: %d\n", 4 * 16, get_mem(mem, 2 * 16));
+    printf("Expected: %d, Actual: %d\n", 6 * 16, get_mem(mem, 2 * 16));
+    printf("Expected: %d, Actual: %d\n", 8 * 16, get_mem(mem, 4 * 16));
+    printf("Expected: %d, Actual: %d\n", 12 * 16, get_mem(mem, 1 * 16));
+    printf("Expected: %d, Actual: %d\n", 13 * 16, get_mem(mem, 1 * 16));
+    printf("Expected: %d, Actual: %d\n", -1, get_mem(mem, 4 * 16));
+    printf("Expected: %d, Actual: %d\n", 0, free_mem(mem, 8 * 16));
+    printf("Expected: %d, Actual: %d\n", 8 * 16, get_mem(mem, 4 * 16));
+
+    free_mem(mem, 0 * 16);
+    free_mem(mem, 4 * 16);
+    free_mem(mem, 6 * 16);
+    free_mem(mem, 8 * 16);
+    free_mem(mem, 12 * 16);
+    free_mem(mem, 13 * 16);
+
+    close(mem);
+
+}
+
 int main(int argc, const char **argv) {
 
+   printf("-------- Running Dr. Franco's tests --------\n");
    franco_test();
+
+   printf("\n------------- Running my tests -------------\n");
+   my_test();
 
    return 0;
 }

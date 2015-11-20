@@ -45,12 +45,13 @@ int free_mem(int mem, int ref) {
 // Writes the contents of the buffer buf to the memory block ref of the memory manager whose handle is mem.
 // Stops writing when the first 0 is encountered in buf.
 // Returns the number of bytes written or a negative number on error.
-int write_mem(int mem, int ref, char *buf) {
+int write_mem(int mem, int ref, char *buf, int size) {
 
     struct write_mem_struct params = {
         .mem = mem,
         .ref = ref,
-        .buf = buf
+        .buf = buf,
+        .size = size
     };
 
     ioctl(mem, IOCTL_WRITE_MEM, (void *)(&params));
