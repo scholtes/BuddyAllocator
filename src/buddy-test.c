@@ -20,7 +20,7 @@ void franco_test() {
     ref = get_mem(mem, 100);
     printf("reference = %d\n", ref);
     sprintf(buffer, "Hello buddy");
-    write_mem(mem, ref, buffer, 11);
+    write_mem(mem, ref, buffer);
     read_mem(mem, ref+3, buffer, 10);
     printf("buffer: %s\n", buffer); /* buffer: lo buddy */
     free_mem(mem, ref);
@@ -28,7 +28,8 @@ void franco_test() {
 }
 
 // My own tests.  Mainly to verify buddy allocator logic for
-// getting and freeing memory
+// getting and freeing memory.
+// Designed only to test with BUDDY_BLOCK_SIZE = BUDDY_NUM_BLOCKS = 16 
 void my_test() {
     int mem;
 

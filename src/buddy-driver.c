@@ -10,7 +10,7 @@
 #include <linux/fs.h>
 #include <linux/slab.h> // kmalloc, kfree
 #include <asm/uaccess.h>
-#include <linux/string.h>
+#include <linux/string.h> // memset, strlen
 
 #include "buddy-dev.h"
 #define DEVICE_NAME "mem_dev"
@@ -30,7 +30,8 @@ static char *memory;
 
 /// ------------------------ BUDDY ALLOCATOR LOGIC ------------------------- ///
 
-// A struct type keep track of our blocks and how they are fragmented
+// A struct type keep track of our blocks and how they are fragmented.
+// A better way would be to keep an array to represent the binary tree.  Would use less space
 enum block_state {PARENT, ALLOCATED, FREE};
 struct block_node {
     enum block_state state;
@@ -214,10 +215,13 @@ static ssize_t write(struct file *file, const char *buffer, size_t length, loff_
 /// -------------- Some more buddy allocator wrapper functions ------------- ///
 
 // Writes to memory.  Num bytes written on success, -1 on failure
-int write_mem(struct file *file, int ref, char *buf, int size) {
+int write_mem(struct file *file, int ref, char *buf) {
     struct block_node *block1;
     struct block_node *block2;
+    int size;
     long rf;
+
+    size = strlen(buf);
 
     block1 = __get_block_from_address(ref);
     block2 = __get_block_from_address(ref + size -1);
@@ -275,8 +279,7 @@ long ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
         ((struct write_mem_struct *)ioctl_param)->return_val = write_mem(
             file,
             ((struct write_mem_struct *)ioctl_param)->ref,
-            ((struct write_mem_struct *)ioctl_param)->buf,
-            ((struct write_mem_struct *)ioctl_param)->size
+            ((struct write_mem_struct *)ioctl_param)->buf
         );
         break;
 
@@ -284,9 +287,9 @@ long ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param)
         printk("    read_mem(...)\n");
         ((struct read_mem_struct *)ioctl_param)->return_val = read_mem(
             file,
-            ((struct write_mem_struct *)ioctl_param)->ref,
-            ((struct write_mem_struct *)ioctl_param)->buf,
-            ((struct write_mem_struct *)ioctl_param)->size
+            ((struct read_mem_struct *)ioctl_param)->ref,
+            ((struct read_mem_struct *)ioctl_param)->buf,
+            ((struct read_mem_struct *)ioctl_param)->size
         );
         break;
 
