@@ -15,8 +15,9 @@
 #define DEVICE_NAME "mem_dev"
 
 // TODO change these back to (1<<12) when done testing
-#define BUDDY_BLOCK_SIZE (1<<4)
-#define BUDDY_NUM_BLOCKS (1<<4)
+#define BUDDY_BLOCK_DEPTH 4
+#define BUDDY_BLOCK_SIZE (1<<BUDDY_BLOCK_DEPTH)
+#define BUDDY_NUM_BLOCKS (1<<BUDDY_BLOCK_DEPTH)
 #define MEM_SIZE (BUDDY_NUM_BLOCKS * BUDDY_BLOCK_SIZE)
 
 MODULE_LICENSE("GPL");
@@ -82,6 +83,40 @@ static void __free_and_merge(struct block_node *block) {
         __free_and_merge(parent);
     }
 }
+
+// Given an address, get the block pointer for the
+// block that contains the memory at that address.
+// Returns NULL if ref is out of range
+struct block_node *__get_block_from_address(int ref) {
+    int block_idx;
+    int nth_bit;
+    int n;
+    struct block_node *current_node;
+
+    if(ref < 0 || MEM_SIZE <= ref) return NULL;
+
+    // The binary representation of the block index (block_idx) from right to left,
+    // starting at the BUDDY_BLOCK_DEPTH bit, will tell us whether the node we are
+    // looking for is in the right or left half of the tree
+    block_idx = ref / BUDDY_BLOCK_SIZE;
+    current_node = buddy_root;
+    for(n = BUDDY_BLOCK_DEPTH-1; n >= 0; n--) {
+        // If the current node is not a leaf, then we already found our block pointer
+        if(current_node->state != PARENT) {
+            break;
+        }
+        nth_bit = (block_idx >> n) & 1;
+        // If 1, go right; else go left
+        if(nth_bit) {
+            current_node = current_node->right_child;
+        } else {
+            current_node = current_node->left_child;
+        }
+    }
+
+    return current_node;
+}
+
 
 /// ------------------------------------------------------------------------ ///
 
@@ -156,12 +191,25 @@ struct file_operations Fops = {
 
 
 void test_get_block_from_address(void) {
+    // This test designed only to work for 16 (max possible) blocks, for my debugging needs
     __split_block(buddy_root);
     __split_block(buddy_root->left_child);
     __split_block(buddy_root->left_child->right_child);
     __split_block(buddy_root->right_child);
     __split_block(buddy_root->right_child->right_child);
     __split_block(buddy_root->right_child->right_child->left_child);
+
+    printk("--Expected: %p\n", buddy_root->right_child->right_child->left_child->left_child);
+    printk("--Actual:   %p\n\n", __get_block_from_address(12*BUDDY_BLOCK_SIZE));
+
+    printk("--Expected: %p\n", buddy_root->right_child->left_child);
+    printk("--Actual:   %p\n\n", __get_block_from_address(10*BUDDY_BLOCK_SIZE + 15));
+
+    printk("--Expected: %p\n", buddy_root->left_child->right_child->right_child);
+    printk("--Actual:   %p\n\n", __get_block_from_address(7*BUDDY_BLOCK_SIZE + 15));
+
+    printk("--Expected: %p\n", buddy_root->right_child->left_child);
+    printk("--Actual:   %p\n\n", __get_block_from_address(7*BUDDY_BLOCK_SIZE + 16));
 
     __free_and_merge(buddy_root->left_child->right_child->left_child);
     __free_and_merge(buddy_root->right_child->right_child->left_child->left_child);
