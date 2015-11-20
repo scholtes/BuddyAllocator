@@ -27,10 +27,59 @@ void franco_test() {
     close(mem);
 }
 
-// My own tests.  Mainly to verify buddy allocator logic for
-// getting and freeing memory.
-// Designed only to test with BUDDY_BLOCK_SIZE = BUDDY_NUM_BLOCKS = 16 
-void my_test() {
+// Internal fragmentation test.  After allocating just
+// over half of the available memory, even a request of 1 byte 
+// is expected to fail
+void fragmentation_test() {
+    int mem, ref;
+
+    mem = open("/dev/mem_dev", 0);
+    printf("Allocating just over half of space...\n");
+
+    ref = get_mem(mem, (MEM_SIZE>>1) + 1);
+    printf("-Expected: %d, Actual: %d\n", 0, ref); // Should start at beginning
+    printf("Allocating 1 byte (should fail)...\n"); // Not possible because of fragmentation
+    ref = get_mem(mem, 1);
+    printf("-Expected: %d, Actual: %d\n", -1, ref);
+
+    printf("Freeing lots of mem...\n");
+    free_mem(mem, 0);
+    printf("Allocating 1 byte (should pass)...\n"); // Should start at beginning
+    ref = get_mem(mem, 1);
+    printf("-Expected: %d, Actual: %d\n", 0, ref);
+
+    free_mem(mem, 0);
+    close(mem);
+}
+
+/* Miscellany tests.  Mainly to verify buddy allocator logic for
+ getting and freeing memory.
+ Designed only to test with BUDDY_BLOCK_SIZE = BUDDY_NUM_BLOCKS = 16 
+ 
+ The first 6 get_mems, if working properly, should cause the buddies to
+ follow this sequence:
+ 
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|_ _ _ _|_ _ _ _ _ _ _ _|    <- After asking for 4 blocks
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|X X|_ _|_ _ _ _ _ _ _ _|    <- After asking for 2 blocks
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|X X|X X|_ _ _ _ _ _ _ _|    <- After asking for 2 blocks
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|X X|X X|X X X X|_ _ _ _|    <- After asking for 4 blocks
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|X X|X X|X X X X|X|_|_ _|    <- After asking for 1 block
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|X X|X X|X X X X|X|X|_ _|    <- After asking for 1 block
+
+         FAILED REQUEST to ask for 4 more blocks
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|X X|X X|_ _ _ _|X|X|_ _|    <- After free block index 8   
+          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+         |X X X X|X X|X X|X X X X|X|X|_ _|    <- After asking for 4 blocks
+                                                 (this time it should succeed)
+*/
+void misc_test() {
     int mem;
 
     if(BUDDY_BLOCK_DEPTH != 4) {
@@ -59,7 +108,6 @@ void my_test() {
     free_mem(mem, 13 * 16);
 
     close(mem);
-
 }
 
 int main(int argc, const char **argv) {
@@ -67,8 +115,11 @@ int main(int argc, const char **argv) {
    printf("-------- Running Dr. Franco's tests --------\n");
    franco_test();
 
-   printf("\n------------- Running my tests -------------\n");
-   my_test();
+   printf("\n-------- Running fragmentation test --------\n");
+   fragmentation_test();
+
+   printf("\n------------ Running misc tests ------------\n");
+   misc_test();
 
    return 0;
 }
