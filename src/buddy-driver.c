@@ -117,6 +117,62 @@ struct block_node *__get_block_from_address(int ref) {
     return current_node;
 }
 
+// Given a memory size, give a reference to that block.
+// Returns a -1 if the request could not be satisfied
+int get_mem(int size, struct block_node *block, int available) {
+    int ref;
+    ref = 0;
+
+    // Case: user has requested more memory than is available
+    if(available < size) {
+        return -1;
+    }
+    // Case: the current block is free and has enough memory
+    if(block->state == FREE) {
+        // Inner case: the current block is too big so we split it into buddies
+        if(size <= (available>>1) && BUDDY_BLOCK_SIZE <= (available>>1)) {
+            __split_block(block);
+            return get_mem(size, block->left_child, available>>1);
+        }
+        // Inner case: the current block is already the proper size
+        block->state = ALLOCATED;
+        return 0;
+    }
+    // Case: the current block is allocated
+    if(block->state == ALLOCATED) {
+        return -1;
+    }
+    // Case: the current block node is not a leaf
+    // Step 1: scan the left tree for open space and return if we found some
+    ref = get_mem(size, block->left_child, available>>1);
+    if(ref >= 0) {
+        return ref;
+    }
+    // Step 2: scan the right tree for open space.  Add an offset if we found
+    //         space, otherwise just return a -1
+    ref = get_mem(size, block->right_child, available>>1);
+    if(ref < 0) {
+        return -1;
+    }
+    ref += (available>>1);
+    return ref;
+
+}
+
+// Frees memory.  0 on success, -1 on failure
+int free_mem(int ref) {
+    struct block_node *block;
+    block = __get_block_from_address(ref);
+
+    if(block == NULL || block->state != ALLOCATED) {
+        return -1;
+    }
+
+    __free_and_merge(block);
+
+    return 0;
+}
+
 
 /// ------------------------------------------------------------------------ ///
 
@@ -148,17 +204,20 @@ static ssize_t read(struct file *file, char *buffer, size_t length, loff_t *offs
 static ssize_t write(struct file *file, const char *buffer, size_t length, loff_t *offset) { return 0; }
 
 long ioctl(struct file *file, unsigned int ioctl_num, unsigned long ioctl_param) {
-
     switch(ioctl_num) {
     case IOCTL_GET_MEM:
         printk("    get_mem(...)\n");
-        // TOOD: FILL IN
-        //((struct get_mem_struct *)ioctl_param)->return_val = 12;
-
+        ((struct get_mem_struct *)ioctl_param)->return_val = get_mem(
+            ((struct get_mem_struct *)ioctl_param)->size,
+            buddy_root,
+            MEM_SIZE
+        );
         break;
     case IOCTL_FREE_MEM:
         printk("    free_mem(...)\n");
-        // TOOD: FILL IN
+        ((struct free_mem_struct *)ioctl_param)->return_val = free_mem(
+            ((struct free_mem_struct *)ioctl_param)->ref
+        );
         break;
 
     case IOCTL_WRITE_MEM:
@@ -192,12 +251,17 @@ struct file_operations Fops = {
 
 void test_get_block_from_address(void) {
     // This test designed only to work for 16 (max possible) blocks, for my debugging needs
-    __split_block(buddy_root);
+    /*__split_block(buddy_root);
     __split_block(buddy_root->left_child);
     __split_block(buddy_root->left_child->right_child);
     __split_block(buddy_root->right_child);
     __split_block(buddy_root->right_child->right_child);
-    __split_block(buddy_root->right_child->right_child->left_child);
+    __split_block(buddy_root->right_child->right_child->left_child);*/
+    printk("~~ ref = %d\n", get_mem(4 * 16, buddy_root, MEM_SIZE)/16);
+    printk("~~ ref = %d\n", get_mem(2 * 16, buddy_root, MEM_SIZE)/16);
+    printk("~~ ref = %d\n", get_mem(2 * 16, buddy_root, MEM_SIZE)/16);
+    printk("~~ ref = %d\n", get_mem(4 * 16, buddy_root, MEM_SIZE)/16);
+    printk("~~ ref = %d\n", get_mem(1 * 16, buddy_root, MEM_SIZE)/16);
 
     printk("--Expected: %p\n", buddy_root->right_child->right_child->left_child->left_child);
     printk("--Actual:   %p\n\n", __get_block_from_address(12*BUDDY_BLOCK_SIZE));
@@ -211,8 +275,11 @@ void test_get_block_from_address(void) {
     printk("--Expected: %p\n", buddy_root->right_child->left_child);
     printk("--Actual:   %p\n\n", __get_block_from_address(7*BUDDY_BLOCK_SIZE + 16));
 
-    __free_and_merge(buddy_root->left_child->right_child->left_child);
-    __free_and_merge(buddy_root->right_child->right_child->left_child->left_child);
+    /*__free_and_merge(buddy_root->left_child->right_child->left_child);
+    __free_and_merge(buddy_root->right_child->right_child->left_child->left_child);*/
+    printk("~~ Freed mem status: %d\n", free_mem(4 * 16)); // 0
+    printk("~~ Freed mem status: %d\n", free_mem(4 * 16)); // -1
+    printk("~~ Freed mem status: %d\n", free_mem(12 * 16)); // 0
 }
 
 
